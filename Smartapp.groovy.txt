@@ -19,9 +19,9 @@ oauth: true
 preferences {
 section("Allow Endpoint to Control These Things...") {
 input "switches", "capability.switch", title: "Which Switches?", multiple: true
-input "locks", "capability.lock", title: "Which Locks?", multiple: true
-input "cameras", "capability.imageCapture", title: "Which cameras?", multiple: true
-input "motionsensors", "capability.motionSensor", title: "Which motion sensors?", multiple: true
+//input "locks", "capability.lock", title: "Which Locks?", multiple: true
+//input "cameras", "capability.imageCapture", title: "Which cameras?", multiple: true
+//input "motionsensors", "capability.motionSensor", title: "Which motion sensors?", multiple: true
 input "contactsensors", "capability.contactSensor", title: "Which contact sensors?", multiple: true
 }
 }
