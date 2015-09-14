@@ -1,8 +1,8 @@
 /**
- *  DSC Alarm Button
+ *  DSC Alarm
  *
- *  Author: Rob Fisher <robfish@att.net>
- *  Date: 2015-02-26
+ *  Author: jeremywindsor@hotmail.com
+ *  Date: 09-14-2015
  */
  // for the UI
 
@@ -13,8 +13,12 @@ preferences {
  
 metadata {
 	// Automatically generated. Make future change here.
-	definition (name: "DSC Stay Alarm Button", author: "Rob Fisher <robfish@att.net>") {
+	definition (name: "DSC Alarm Stay Arm", author: "jeremywindsor@hotmail.com") {
 		capability "Switch"
+
+		command "arm"
+		command "disarm"
+		command "stay"
 	}
 
 	// simulator metadata
@@ -24,9 +28,11 @@ metadata {
 	// UI tile definitions
 	tiles {
 		standardTile("button", "device.switch", width: 1, height: 1, canChangeIcon: true) {
-			state "off", label: 'Ready', action: "switch.on", icon: "st.Home.home4", backgroundColor: "#79b821"
-			state "on", label: 'Armed', action: "switch.off", icon: "st.Home.home4", backgroundColor: "#800000"
-    }
+			state "off", label: 'Stay Arm', action: "switch.on", icon: "st.Home.home4", backgroundColor: "#ccffcc"
+			state "on", label: 'Disarm', action: "switch.off", icon: "st.Home.home4", backgroundColor: "#EE0000"
+
+}
+
 		main "button"
 		details(["button"])
 	}
@@ -35,7 +41,16 @@ metadata {
 def parse(String description) {
 }
 
+def stay() {
+	//sendCmd("api/alarm/stayarm")
+	//sendEvent(name: "button", value: "arm")
+	log.debug "Executing 'stay arm'"
+	// TODO: handle 'strobe' command
+	sendEvent(name: "switch", value: "on");            
+}
+
 def on() {
+    //right now do not arm or disarm... 
     def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/api/alarm/stayarm",
@@ -44,13 +59,23 @@ def on() {
             //HOST: getHostAddress()
         ]
     )
-    log.debug "response" : "Request to arm received"
-    //log.debug "arm"
-    sendEvent (name: "switch", value: "on")
+    log.debug "Executing 'stay'"
+	// TODO: handle 'siren' command
+	sendEvent(name: "switch", value: "on");  
     return result
 }
 
+def disarm() {
+	//right now do not arm or disarm... 
+    //sendCmd("api/alarm/disarm")
+	//sendEvent(name: "button", value: "disarm")
+	log.debug "Executing 'disarm'"
+	// TODO: handle 'both' command
+	sendEvent(name: "switch", value: "off");    
+}
+
 def off() {
+	//right now do not arm or disarm... 
     def result = new physicalgraph.device.HubAction(
         method: "GET",
         path: "/api/alarm/disarm",
@@ -59,8 +84,8 @@ def off() {
             //HOST: getHostAddress()
         ]
     )
-    log.debug "response" : "Request to disarm received"
-    //log.debug "disarm"
-    sendEvent (name: "switch", value: "off")
+	log.debug "Executing 'disarm'"
+	// TODO: handle 'both' command
+	sendEvent(name: "switch", value: "off");       
     return result
 }
