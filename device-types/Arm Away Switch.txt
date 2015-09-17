@@ -16,8 +16,10 @@ metadata {
 	definition (name: "DSC Alarm Away Arm", author: "jeremywindsor@hotmail.com") {
 		capability "Switch"
 
-		command "arm"
+		command "away"
 		command "disarm"
+		command "stay"
+		command "disarm2"
 	}
 
 	// simulator metadata
@@ -41,9 +43,10 @@ def parse(String description) {
 }
 
 def away() {
-	//sendCmd("api/alarm/arm")
-	//sendEvent(name: "button", value: "arm")
-	log.debug "Executing 'arm away'"
+	//right now do not arm or disarm... 
+    //sendCmd("api/alarm/arm")
+	//sendEvent(name: "button", value: "away")
+	log.debug "Executing 'away'"
 	// TODO: handle 'strobe' command
 	sendEvent(name: "switch", value: "on");            
 }
