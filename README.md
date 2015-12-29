@@ -17,10 +17,8 @@ Get all the contact sensor id's and switch id's.
 
 alarmserver.cfg
 
-zone closed
 zoneclose1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/contactsensors/$sensorid/closed?access_token=$access-token
 
-zone open
 zoneopen1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/contactsensors/$sensorid/open?access_token=$access-token
 
 arm
