@@ -4,7 +4,7 @@ https://graph.api.smartthings.com/oauth/authorize?response_type=code&redirect_ur
 copy the url
 http://localhost/?code=$code
 
-use this url with client id, secret oauth key, and code
+use this url with client id, secret oauth key, and code.  Use incognito mode if you get a 401 error.
 https://graph.api.smartthings.com/oauth/token?grant_type=authorization_code&scope=app&redirect_uri=http://localhost&client_id=$clientid&client_secret=$clientsecret&code=$code
 
 save access token, it is for the authentication
