@@ -22,3 +22,11 @@ zoneclose1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/
 
 zone open
 zoneopen1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/contactsensors/$sensorid/open?access_token=$access-token
+
+arm
+alarmaway=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/away?access_token=$access-token
+alarmstay=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/stay?access_token=$access-token
+
+disarm
+alarmoff1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/disarm?access_token=$access-token
+alarmoff2=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/disarm?access_token=$access-token
