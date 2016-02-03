@@ -1,4 +1,6 @@
-#!/usr/bin/python
+
+pi@raspberrypi:~/alarmserver$ cat alarmserver.py
+#!/usr/bin/python2.7
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
 ## Written by donnyk+envisalink@gmail.com
@@ -94,8 +96,10 @@ class AlarmServerConfig():
         self.ALARMCODE = self.read_config_var('envisalink', 'alarmcode', 1111, 'int')
         self.EVENTTIMEAGO = self.read_config_var('alarmserver', 'eventtimeago', True, 'bool')
         self.LOGFILE = self.read_config_var('alarmserver', 'logfile', '', 'str')
-        self.ALARMSTAY = self.read_config_var('alarmserver', 'alarmstay', '', 'str')
-        self.ALARMAWAY = self.read_config_var('alarmserver', 'alarmaway', '', 'str')
+        self.CLIENTID = self.read_config_var('alarmserver', 'clientid', '', 'str')
+        self.ACCESSTOKEN = self.read_config_var('alarmserver', 'accesstoken', '', 'str')
+        self.ALARMTOKEN = self.read_config_var('alarmserver', 'alarmtoken', '', 'str')
+        self.STURL = self.read_config_var('alarmserver', 'smartthingsurl', '', 'str')
 
         global LOGTOFILE
         if self.LOGFILE == '':
@@ -103,25 +107,70 @@ class AlarmServerConfig():
         else:
             LOGTOFILE = True
 
-        self.ZONEOPEN={}
-        for i in range(1, MAXZONES+1):
-            self.ZONEOPEN[i]=self.read_config_var('alarmserver', 'zoneopen'+str(i), False, 'str', True)
+        self.ALARMSTAY={}
+        self.ALARMAWAY={}
+        self.ALARMOFF={}
+        self.ALARMEXITDELAY={}
+        self.ALARMENTRYDELAY={}
+        self.ALARMNOTREADY={}
+        self.ALARMREADY={}
+        self.ALARMACTIVE={}
+        for i in range(1, 99):
+            deviceid=self.read_config_var('alarm'+str(i), 'deviceid', False, 'str', True)
+            type=self.read_config_var('alarm'+str(i), 'type', 'switches', 'str', True)
+            away=self.read_config_var('alarm'+str(i), 'away', False, 'str', True)
+            stay=self.read_config_var('alarm'+str(i), 'stay', False, 'str', True)
+            off=self.read_config_var('alarm'+str(i), 'off', False, 'str', True)
+            exitdelay=self.read_config_var('alarm'+str(i), 'exitdelay', False, 'str', True)
+            entrydelay=self.read_config_var('alarm'+str(i), 'entrydelay', False, 'str', True)
+            notready=self.read_config_var('alarm'+str(i), 'notready', False, 'str', True)
+            ready=self.read_config_var('alarm'+str(i), 'ready', False, 'str', True)
+            alarm=self.read_config_var('alarm'+str(i), 'alarm', False, 'str', True)
+            if deviceid:
+                if stay:
+                    self.ALARMSTAY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+stay+'?access_token='+self.ACCESSTOKEN
+                if away:
+                    self.ALARMAWAY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+away+'?access_token='+self.ACCESSTOKEN
+                if off:
+                    self.ALARMOFF[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+off+'?access_token='+self.ACCESSTOKEN
+                if exitdelay:
+                    self.ALARMEXITDELAY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+exitdelay+'?access_token='+self.ACCESSTOKEN
+                if entrydelay:
+                    self.ALARMENTRYDELAY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+entrydelay+'?access_token='+self.ACCESSTOKEN
+                if notready:
+                    self.ALARMNOTREADY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+notready+'?access_token='+self.ACCESSTOKEN
+                if ready:
+                    self.ALARMREADY[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+ready+'?access_token='+self.ACCESSTOKEN
+                if alarm:
+                    self.ALARMACTIVE[i]=self.STURL+self.CLIENTID+'/'+type+'/'+deviceid+'/'+alarm+'?access_token='+self.ACCESSTOKEN
 
+        self.ZONEOPEN={}
         self.ZONECLOSE={}
         for i in range(1, MAXZONES+1):
-            self.ZONECLOSE[i]=self.read_config_var('alarmserver', 'zoneclose'+str(i), False, 'str', True)
+            zonetype = self.read_config_var('zone'+str(i), 'type', False, 'str', True)
+            if zonetype == 'contact':
+              type = 'contactsensors'
+              open = 'open'
+              close = 'closed'
+            elif zonetype == 'motion':
+              type = 'motionsensors'
+              open = 'active'
+              close = 'inactive'
 
-        self.ALARMOFF={}
-        for i in range(1, MAXPARTITIONS+1):
-            self.ALARMOFF[i]=self.read_config_var('alarmserver', 'alarmoff'+str(i), False, 'str', True)
-
+            if zonetype:
+              self.ZONEOPEN[i]=self.STURL+self.CLIENTID+'/'+type+'/'+self.read_config_var('zone'+str(i), 'deviceid', False, 'str', True)+'/'+open+'?access_token='+self.ACCESSTOKEN
+              self.ZONECLOSE[i]=self.STURL+self.CLIENTID+'/'+type+'/'+self.read_config_var('zone'+str(i), 'deviceid', False, 'str', True)+'/'+close+'?access_token='+self.ACCESSTOKEN
+            else:
+              self.ZONEOPEN[i]=False
+              self.ZONECLOSE[i]=False
+ 
         self.PARTITIONNAMES={}
         for i in range(1, MAXPARTITIONS+1):
             self.PARTITIONNAMES[i]=self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
 
         self.ZONENAMES={}
         for i in range(1, MAXZONES+1):
-            self.ZONENAMES[i]=self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+            self.ZONENAMES[i]=self.read_config_var('zone'+str(i), 'description', False, 'str', True)
 
         self.ALARMUSERNAMES={}
         for i in range(1, MAXALARMUSERS+1):
@@ -410,33 +459,81 @@ class EnvisalinkClient(asynchat.async_chat):
                                         alarmserver_logger(str(self._config.ZONECLOSE[int(parameters)]))
                                 except:
                                         alarmserver_logger("Failed to connect to SmartThings")
+                        #Alarm Ready
+                        elif str(code) == "650":
+                                try:
+                                        for i in self._config.ALARMREADY:
+                                            response = urllib2.urlopen(str(self._config.ALARMREADY[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMREADY[i]))
+                                except:
+                                        alarmserver_logger("Failed to connect to SmartThings")
+                        #Alarm Not Ready
+                        elif str(code) == "651":
+                                try:
+                                        for i in self._config.ALARMNOTREADY:
+                                            response = urllib2.urlopen(str(self._config.ALARMNOTREADY[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMNOTREADY[i]))
+                                except:
+                                        alarmserver_logger("Failed to connect to SmartThings")
+                        #Alarm Active (Alarm Tripped)
+                        elif str(code) == "654":
+                                try:
+                                        for i in self._config.ALARMACTIVE:
+                                            response = urllib2.urlopen(str(self._config.ALARMACTIVE[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMACTIVE[i]))
+                                except:
+                                        alarmserver_logger("Failed to connect to SmartThings")
                         #Alarm Disarm
                         elif str(code) == "655":
                                 try:
-                                        response = urllib2.urlopen(str(self._config.ALARMOFF[1]))
-                                        html = response.read()
-                                        alarmserver_logger(str(self._config.ALARMOFF[1]))
-                                        response = urllib2.urlopen(str(self._config.ALARMOFF[2]))
-                                        html = response.read()
-                                        alarmserver_logger(str(self._config.ALARMOFF[2]))
+                                        for i in self._config.ALARMOFF:
+                                            response = urllib2.urlopen(str(self._config.ALARMOFF[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMOFF[i]))
                                 except:
                                         alarmserver_logger("Failed to connect to SmartThings")
-                        #Alarm Stay
+                        #Exit Delay
                         elif str(code) == "656":
                                 try:
-                                        response = urllib2.urlopen(str(self._config.ALARMSTAY))
-                                        html = response.read()
-                                        alarmserver_logger(str(self._config.ALARMSTAY))
+                                        for i in self._config.ALARMEXITDELAY:
+                                            response = urllib2.urlopen(str(self._config.ALARMEXITDELAY[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMEXITDELAY[i]))
                                 except:
                                         alarmserver_logger("Failed to connect to SmartThings")
-                        #Alarm Away
-                        elif str(code) == "652":
+                        #Entry Delay
+                        elif str(code) == "657":
                                 try:
-                                        response = urllib2.urlopen(str(self._config.ALARMAWAY))
-                                        html = response.read()
-                                        alarmserver_logger(str(self._config.ALARMAWAY))
+                                        for i in self._config.ALARMENTRYDELAY:
+                                            response = urllib2.urlopen(str(self._config.ALARMENTRYDELAY[i]))
+                                            html = response.read()
+                                            alarmserver_logger(str(self._config.ALARMENTRYDELAY[i]))
                                 except:
                                         alarmserver_logger("Failed to connect to SmartThings")
+
+                        #Alarm Armed
+                        elif str(code) == "652":
+                                if message.endswith("Away"):
+                                        # Turn on away
+                                        try:
+                                                for i in self._config.ALARMAWAY:
+                                                    response = urllib2.urlopen(str(self._config.ALARMAWAY[i]))
+                                                    html = response.read()
+                                                    alarmserver_logger(str(self._config.ALARMAWAY[i]))
+                                        except:
+                                                alarmserver_logger("Failed to connect to SmartThings")
+                                elif message.endswith("Stay"):
+                                        # Turn on stay
+                                        try:
+                                                for i in self._config.ALARMSTAY:
+                                                    response = urllib2.urlopen(str(self._config.ALARMSTAY[i]))
+                                                    html = response.read()
+                                                    alarmserver_logger(str(self._config.ALARMSTAY[i]))
+                                        except:
+                                                alarmserver_logger("Failed to connect to SmartThings")
 
 
 class push_FileProducer:
@@ -675,3 +772,4 @@ if __name__=="__main__":
         server.shutdown(socket.SHUT_RDWR) 
         server.close() 
         sys.exit()
+pi@raspberrypi:~/alarmserver$ 
