@@ -1,5 +1,3 @@
-
-pi@raspberrypi:~/alarmserver$ cat alarmserver.py
 #!/usr/bin/python2.7
 ## Alarm Server
 ## Supporting Envisalink 2DS/3
@@ -772,4 +770,3 @@ if __name__=="__main__":
         server.shutdown(socket.SHUT_RDWR) 
         server.close() 
         sys.exit()
-pi@raspberrypi:~/alarmserver$ 
