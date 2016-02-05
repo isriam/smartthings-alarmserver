@@ -11,14 +11,11 @@ Using the Smartthings IDE create the new device types using the code from the de
 
 There are 6 types of devices you can create:
 
-* DSC Stay Panel  - (Shows partition status info and provides Stay switch that can be used in routines)
-* DSC Away Panel  - (Shows partition status info and provides Away switch that can be used in routines)
-* DSC Panel       - (Shows partition status info, DEPRECATED, see above)
+* DSC Stay Switch  - (Shows partition status info and provides Stay switch that can be used in routines)
+* DSC Away Switch  - (Shows partition status info and provides Away switch that can be used in routines)
 * DSC ZoneContact - (contact device open/close)
 * DSC ZoneMotion  - (motion device active/inactive)
 * DSC ZoneSmoke   - (smoke device, alarm/clear)
-
-At a minimum you'll probably want the Stay/Away panels, Contact, and Motion.
 
 In the Web IDE for Smartthings create a new device type for each of the above devices and paste in the code for each device from the corresponding groovy files in the repo.
 
@@ -26,7 +23,7 @@ For all the device types make sure you save them and then publish them for yours
 
 ### Create panel devices
 
-Create a new device and choose the type of "DSC Panel", "DSC Stay Panel" or "DSC Away Panel" that you published earlier. The network id needs to be **dscpanel1**, **dscstay1** or **dscaway1** depending on the panel type. Once the devices are created - edit the configuration via smartthings app to setup the IP and port of your alarmserver.
+Create a new device and choose the type of "DSC Stay Switch" or "DSC Away Switch" that you published earlier. The network id needs to be **dscstay1** or **dscaway1** depending on the panel type. Once the devices are created - edit the configuration via smartthings app to setup the IP and port of your alarmserver.
 
 ### Create individual zones
 Create a new "Zone Device" for each Zone you want Smartthings to show you status for. 
