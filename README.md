@@ -13,16 +13,4 @@ save access token, it is for the authentication
 Go to this url and get smartapp ID
 https://graph.api.smartthings.com/api/smartapps/installations
 
-Get all the contact sensor id's and switch id's.
-
-alarmserver.cfg
-
-zoneclose1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/contactsensors/$sensorid/closed?access_token=$access-token
-
-zoneopen1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/contactsensors/$sensorid/open?access_token=$access-token
-
-alarmaway=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/away?access_token=$access-token
-alarmstay=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/stay?access_token=$access-token
-
-alarmoff1=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/disarm?access_token=$access-token
-alarmoff2=https://graph.api.smartthings.com/api/smartapps/installations/$appid/switches/$switchid/disarm?access_token=$access-token
+restapi.txt has fu ll documentation, these are short notes for experienced users.
