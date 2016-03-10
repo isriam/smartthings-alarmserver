@@ -16,7 +16,7 @@ evl_ArmModes = {
         2 : 'Zero Entry Away',
         3 : 'Zero Entry Stay'
     }
-
+ 
 evl_ResponseTypes = {
     500 : {'name' : 'Command Acknowledge', 'description' : 'A command has been received successfully.'},
     501 : {'name' : 'Command Error', 'description' : 'A command has been received with a bad checksum.'},
