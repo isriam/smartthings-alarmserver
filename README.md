@@ -11,11 +11,15 @@ Using the Smartthings IDE create the new device types using the code from the de
 
 There are 6 types of devices you can create:
 
-* DSC Stay Switch  - (Shows partition status info and provides Stay switch that can be used in routines)
-* DSC Away Switch  - (Shows partition status info and provides Away switch that can be used in routines)
-* DSC ZoneContact - (contact device open/close)
-* DSC ZoneMotion  - (motion device active/inactive)
-* DSC ZoneSmoke   - (smoke device, alarm/clear)
+* DSC Stay Panel  - (Shows partition status info and provides Stay switch that can be used in routines)
+* DSC Away Panel  - (Shows partition status info and provides Away switch that can be used in routines)
+* DSC Zone Contact - (contact device open/close)
+* DSC Zone Motion  - (motion device active/inactive)
+* DSC Zone Smoke 4w  - (4-wire smoke device, alarm/clear/test. It's nearly the same as motion or contact, as it's attached to a zone.)
+* DSC Zone Smoke 2w  - (2-wire smoke device, alarm/clear, UNTESTED, Probably doesn't work right now and I have no way to test it. 2 wire devices create their own alarm type that isn't attached to a zone.)
+
+
+At a minimum you'll probably want the Stay/Away panels, Contact, and Motion.
 
 In the Web IDE for Smartthings create a new device type for each of the above devices and paste in the code for each device from the corresponding groovy files in the repo.
 
@@ -23,7 +27,7 @@ For all the device types make sure you save them and then publish them for yours
 
 ### Create panel devices
 
-Create a new device and choose the type of "DSC Stay Switch" or "DSC Away Switch" that you published earlier. The network id needs to be **dscstay1** or **dscaway1** depending on the panel type. Once the devices are created - edit the configuration via smartthings app to setup the IP and port of your alarmserver.
+Create a new device and choose the type of "DSC Panel", "DSC Stay Panel" or "DSC Away Panel" that you published earlier. The network id needs to be **dscpanel1**, **dscstay1** or **dscaway1** depending on the panel type. Be sure your hub is selected as well. Once the devices are created - edit the configuration via smartthings app to setup the IP and port of your alarmserver.
 
 ### Create individual zones
 Create a new "Zone Device" for each Zone you want Smartthings to show you status for. 
@@ -31,6 +35,8 @@ Create a new "Zone Device" for each Zone you want Smartthings to show you status
 The network id needs to be the word 'zone' followed by the matching zone number that your DSC system sees it as.
 
 For example: **dsczone1** or **dsczone5**
+
+And again, ensure your hub is selected in the device settings.
 
 ### The rest of the setup
 
@@ -50,3 +56,14 @@ For example: **dsczone1** or **dsczone5**
 
 4. Fire up the AlarmServer, you should see your events from the server show up within 1-2 seconds on your Smartphone.
 
+## Thanks!
+Thanks goes out to the following people, without their previous work none of this would have been possible:
+* juggie
+* Ethomasii
+* Rob Fisher <robfish@att.net>
+* Carlos Santiago <carloss66@gmail.com>
+* JTT <aesystems@gmail.com>
+* Donny K <donnyk+envisalink@gmail.com>
+* Leaberry <leaberry@gmail.com>
+* Kent Holloway <drizit@gmail.com>
+* Matt Martz <matt.martz@gmail.com>
