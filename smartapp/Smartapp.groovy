@@ -120,8 +120,6 @@ private update() {
     // log.debug "Zone or partition: $zoneorpartition"
     if (opts[0]) {
       if (['510', '511'].contains(eventCode)) {
-        int num = (Integer.parseInt(zoneorpartition, 16));
-        def binary = (Integer.toBinaryString(num));
         def flash = (opts[1] == 'ledflash') ? 'flash ' : ''
 
         def ledMap = [
@@ -137,7 +135,7 @@ private update() {
 
         for (def i = 0; i < 8; i++) {
           def name = ledMap."${i}"
-          def status = (binary[i] == '1') ? 'on' : 'off'
+          def status = (zoneorpartition[i] == '1') ? 'on' : 'off'
           if (notifyEvents && (notifyEvents.contains('all') || notifyEvents.contains('led'+name+status))) {
             sendMessage("${opts[0]} 1 ${name} led in ${flash}${status} state")
           }
