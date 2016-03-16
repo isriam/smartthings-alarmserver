@@ -105,12 +105,27 @@ class AlarmServerConfig():
             LOGTOFILE = True
 
         self.PARTITIONNAMES={}
+        self.PARTITIONS={}
         for i in range(1, MAXPARTITIONS+1):
-            self.PARTITIONNAMES[i]=self.read_config_var('alarmserver', 'partition'+str(i), False, 'str', True)
+            self.PARTITIONNAMES[i]=self.read_config_var('partition'+str(i), 'name', False, 'str', True)
+            stay=self.read_config_var('partition'+str(i), 'stay', False, 'str', True)
+            away=self.read_config_var('partition'+str(i), 'away', False, 'str', True)
+            if stay!=False or away!=False:
+                self.PARTITIONS[i] = {}
+                if away!=False:
+                    self.PARTITIONS[i]['away']=away
+                if stay!=False:
+                    self.PARTITIONS[i]['stay']=stay
 
+        self.ZONES={}
         self.ZONENAMES={}
         for i in range(1, MAXZONES+1):
-            self.ZONENAMES[i]=self.read_config_var('alarmserver', 'zone'+str(i), False, 'str', True)
+            self.ZONENAMES[i]=self.read_config_var('zone'+str(i), 'name', False, 'str', True)
+            type = self.read_config_var('zone'+str(i), 'type', False, 'str', True)
+            if(self.ZONENAMES[i]!=False and type!=False):
+                self.ZONES[i] = {}
+                self.ZONES[i]['name'] = self.ZONENAMES[i]
+                self.ZONES[i]['type'] = type
 
         self.ALARMUSERNAMES={}
         for i in range(1, MAXALARMUSERS+1):
@@ -133,6 +148,28 @@ class AlarmServerConfig():
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             self.defaulting(section, variable, default, quiet)
             return default
+
+class DeviceSetup():
+    def __init__(self, config):
+        self._config = config
+
+        # prepare partition and zone json for device creation
+        partitionjson = json.dumps(config.PARTITIONS)
+        zonejson = json.dumps(config.ZONES)
+
+        headers = {'content-type': 'application/json'}
+
+        # create zone devices
+        myURL = config.CALLBACKURL_BASE + '/' + config.CALLBACKURL_APP_ID + '/installzones' + '?access_token=' + config.CALLBACKURL_ACCESS_TOKEN
+        if (config.LOGURLREQUESTS):
+          alarmserver_logger('myURL: %s' % myURL)
+        requests.post(myURL, data=zonejson, headers=headers)
+
+        # create partition devices
+        myURL = config.CALLBACKURL_BASE + '/' + config.CALLBACKURL_APP_ID + '/installpartitions' + '?access_token=' + config.CALLBACKURL_ACCESS_TOKEN
+        if (config.LOGURLREQUESTS):
+          alarmserver_logger('myURL: %s' % myURL)
+        requests.post(myURL, data=partitionjson, headers=headers)
 
 class HTTPChannel(asynchat.async_chat):
     def __init__(self, server, sock, addr):
@@ -382,34 +419,100 @@ class EnvisalinkClient(asynchat.async_chat):
 
     def callbackurl_event(self, code, parameters, event, message):
         myEvents = self._config.CALLBACKURL_EVENT_CODES.split(',')
-        # Determin what events we are sending to smartthings then send if we match
+        # Determine what events we are sending to smartthings then send if we match
         if str(code) in myEvents:
-           # Now check if Zone has a custom name, if it does then send notice to Smartthings
-           # Check for event type
+           # Check for events with no type by code instead
            if str(code) in ['510','511']:
-             myURL = self._config.CALLBACKURL_BASE + '/' + self._config.CALLBACKURL_APP_ID + '/panel/' + str(code) + '/' + str(parameters) + '?access_token=' + self._config.CALLBACKURL_ACCESS_TOKEN
+             codeMap = {
+               '510':'led',
+               '511':'ledflash',
+             }
+
+             ledMap = {
+               '0':'backlight',
+               '1':'fire',
+               '2':'program',
+               '3':'trouble',
+               '4':'bypass',
+               '5':'memory',
+               '6':'armed',
+               '7':'ready'
+             }
+
+             update = {
+               'type': 'partition',
+               'value': '1',
+               'status': codeMap[str(code)],
+               'parameters': {}
+             }
+
+             binary = bin(int(str(parameters), 16))[2:].zfill(8)
+
+             for i in range(0, 7):
+               value = 'on' if (binary[i] == '1') else 'off'
+               update['parameters'][ledMap[str(i)]]=value
+
            elif event['type'] == 'partition':
              # Is our partition setup with a custom name?
              if int(parameters[0]) in self._config.PARTITIONNAMES and self._config.PARTITIONNAMES[int(parameters[0])]!=False:
-               armmode=''
+               codeMap = {
+                 '650':'ready',
+                 '651':'notready',
+                 '653':'forceready',
+                 '654':'alarm',
+                 '655':'disarm',
+                 '656':'exitdelay',
+                 '657':'entrydelay',
+                 '663':'chime',
+                 '664':'nochime',
+                 '701':'armed',
+                 '702':'armed',
+                 '840':'trouble',
+                 '841':'restore',
+               }
+
+               update = {
+                 'type': 'partition',
+                 'value': str(int(parameters[0]))
+               }
+
                if str(code) == '652':
                  if message.endswith('Zero Entry Away'):
-                   armmode=2
+                   update['status']='instantaway'
                  elif message.endswith('Zero Entry Stay'):
-                   armmode=3
+                   update['status']='instantstay'
                  elif message.endswith('Away'):
-                   armmode=0
+                   update['status']='away'
                  elif message.endswith('Stay'):
-                   armmode=1
-
-               myURL = self._config.CALLBACKURL_BASE + '/' + self._config.CALLBACKURL_APP_ID + '/panel/' + str(code) + str(armmode) + '/' + str(int(parameters[0])) + '?access_token=' + self._config.CALLBACKURL_ACCESS_TOKEN
+                   update['status']='stay'
+                 else:
+                   update['status']='armed'
+               else:
+                   update['status']=codeMap[str(code)]
              else:
                # We don't care about this partition
                return
            elif event['type'] == 'zone':
              # Is our zone setup with a custom name, if so we care about it
              if int(parameters) in self._config.ZONENAMES and self._config.ZONENAMES[int(parameters)]!=False:
-               myURL = self._config.CALLBACKURL_BASE + '/' + self._config.CALLBACKURL_APP_ID + '/panel/' + str(code) + '/' + str(int(parameters)) + '?access_token=' + self._config.CALLBACKURL_ACCESS_TOKEN
+               codeMap = {
+                 '601':'alarm',
+                 '602':'closed',
+                 '603':'tamper',
+                 '604':'restore',
+                 '605':'fault',
+                 '606':'restore',
+                 '609':'open',
+                 '610':'closed',
+                 '631':'smoke',
+                 '632':'clear',
+               }
+
+               update = {
+                 'type': 'zone',
+                 'value': str(int(parameters)),
+                 'status': codeMap[str(code)]
+               }
              else:
                # We don't care about this zone
                return
@@ -420,13 +523,18 @@ class EnvisalinkClient(asynchat.async_chat):
            # If we made it here we should send to Smartthings
            try:
              # Note: I don't currently care about the return value, fire and forget right now
-             requests.get(myURL)
+             jsonupdate = json.dumps(update)
+             headers = {'content-type': 'application/json'}
+             # send json update
+             myURL = config.CALLBACKURL_BASE + '/' + config.CALLBACKURL_APP_ID + '/update' + '?access_token=' + config.CALLBACKURL_ACCESS_TOKEN
              if (config.LOGURLREQUESTS):
                alarmserver_logger('myURL: %s' % myURL)
+             requests.post(myURL, data=jsonupdate, headers=headers)
+
              #print "myURL: ", myURL
              #print "Exit code: ", r.status_code
              #print "Response data: ", r.text
-             time.sleep(0.5)
+             #time.sleep(0.5)
            except:
              print sys.exc_info()[0]
 
@@ -675,6 +783,7 @@ if __name__=="__main__":
     alarmserver_logger('and on a DSC-1832 + EVL-2DS')
     alarmserver_logger('and on a DSC-1864 v4.6 + EVL-3')
 
+    DeviceSetup(config)
     server = AlarmServer(config)
     proxy = EnvisalinkProxy(config, server)
 
