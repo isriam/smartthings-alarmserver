@@ -17,7 +17,12 @@ metadata {
         command "disarm"
         command "instant"
         command "night"
+        command "nokey"
         command "partition"
+        command "key"
+        command "keyfire"
+        command "keyaux"
+        command "keypanic"
         command "reset"
         command "stay"
         command "togglechime"
@@ -33,13 +38,14 @@ metadata {
         state "alarm", label:'Alarm', action: 'disarm', icon:"st.security.alarm.alarm", backgroundColor:"#ff0000"
         state "away", label:'Armed Away', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#800000"
         state "disarm", label:'Disarmed', icon:"st.security.alarm.off", backgroundColor:"#79b821"
+        state "duress", label:'Duress', action: 'disarm', icon:"st.security.alarm.alarm", backgroundColor:"#ff0000"
         state "entrydelay", label:'Entry Delay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#ff9900"
         state "exitdelay", label:'Exit Delay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#ff9900"
         state "notready", label:'Not Ready', icon:"st.security.alarm.off", backgroundColor:"#ffcc00"
         state "ready", label:'Ready', action: 'stay', icon:"st.security.alarm.off", backgroundColor:"#79b821"
         state "forceready", label:'Ready - F', action: 'stay', icon:"st.security.alarm.off", backgroundColor:"#79b821"
         state "stay", label:'Armed Stay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#008CC1"
-        state "instantaway", label:'Armed Instant Away', action: 'stay', icon:"st.security.alarm.on", backgroundColor:"#800000"
+        state "instantaway", label:'Armed Instant Away', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#800000"
         state "instantstay", label:'Armed Instant Stay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#008CC1"
       }
       standardTile("trouble", "device.trouble", width: 2, height: 2, title: "Trouble") {
@@ -96,13 +102,26 @@ metadata {
       valueTile("ledbacklight", "device.ledbacklight", width: 2, height: 1){
         state "ledbacklight", label:'Backlight: ${currentValue}'
       }
+      standardTile("key", "device.key", width: 2, height: 2, title: "Key"){
+        state "nokey", label: 'Alarm\u00A0Keys\u00A0Off', action: "key", icon: "st.illuminance.illuminance.dark", backgroundColor: "#7B3516", defaultState: true
+        state "key", label: 'Alarm\u00A0Keys\u00A0On', action: "nokey", icon: "st.illuminance.illuminance.light", backgroundColor: "#FF6E2E"
+      }
+      standardTile("keyfire", "device.keyfire", width: 2, height: 2, title: "Fire Key"){
+        state "restore", label: 'Fire\u00A0Key', action: "keyfire", icon: "st.Home.home29", backgroundColor: "#FF2400"
+        state "alarm", label: 'Fire\u00A0Key\u00A0Alarm', action: "keyfire", icon: "st.Home.home29", backgroundColor: "#FF2400"
+      }
+      standardTile("keyaux", "device.keyaux", width: 2, height: 2, title: "Aux Key"){
+        state "restore", label: 'Aux\u00A0Key', action: "keyaux", icon: "st.Transportation.transportation7", backgroundColor: "#DD0000"
+        state "alarm", label: 'Aux\u00A0Key\u00A0Alarm', action: "keyaux", icon: "st.Transportation.transportation7", backgroundColor: "#DD0000"
+      }
+      standardTile("keypanic", "device.keypanic", width: 2, height: 2, title: "Panic Key"){
+        state "restore", label: 'Panic\u00A0Key', action: "keypanic", icon: "st.Transportation.transportation9", backgroundColor: "#000fd5"
+        state "alarm", label: 'Panic\u00A0Key\u00A0Alarm', action: "keypanic", icon: "st.Transportation.transportation9", backgroundColor: "#000fd5"
+      }
 
       main "status"
-      details(["status", "trouble", "chime", "away", "stay", "disarm", "instant", "night", "reset","bypassoff", "ledready", "ledarmed", "ledmemory", "ledbypass", "ledtrouble", "ledprogram", "ledfire", "ledbacklight"])
+      details(["status", "trouble", "chime", "away", "stay", "disarm", "instant", "night", "reset", "bypassoff", "ledready", "ledarmed", "ledmemory", "ledbypass", "key", "ledtrouble", "ledprogram", "ledfire", "ledbacklight", "keyfire", "keyaux", "keypanic"])
     }
-}
-
-def parse(String description) {
 }
 
 def partition(String state, String partition, Map parameters) {
@@ -122,7 +141,7 @@ def partition(String state, String partition, Map parameters) {
 
   if (onList.contains(state)) {
     sendEvent (name: "switch", value: "on")
-  } else if (!(chimeList.contains(state) || troubleMap[state] || state.startsWith('led'))) {
+  } else if (!(chimeList.contains(state) || troubleMap[state] || state.startsWith('led') || state.startsWith('key'))) {
     sendEvent (name: "switch", value: "off")
   }
 
@@ -138,6 +157,10 @@ def partition(String state, String partition, Map parameters) {
     for (p in parameters) {
       sendEvent (name: "led${p.key}", value: "${flash}${p.value}")
     }
+  } else if (state.startsWith('key')) {
+    def name = state.minus('alarm').minus('restore')
+    def value = state.replaceAll(/.*(alarm|restore)/, '$1')
+    sendEvent (name: "${name}", value: "${value}")
   } else {
     // Send final event
     sendEvent (name: "status", value: "${state}")
@@ -164,12 +187,38 @@ def night() {
   parent.sendUrl('togglenight')
 }
 
+def nokey() {
+  sendEvent (name: "key", value: "nokey")
+}
+
 def on() {
   stay()
 }
 
 def off() {
   disarm()
+}
+
+def key() {
+  sendEvent (name: "key", value: "key")
+}
+
+def keyfire() {
+  if ("${device.currentValue("key")}" == 'key') {
+    parent.sendUrl('panic?type=1')
+  }
+}
+
+def keyaux() {
+  if ("${device.currentValue("key")}" == 'key') {
+    parent.sendUrl('panic?type=2')
+  }
+}
+
+def keypanic() {
+  if ("${device.currentValue("key")}" == 'key') {
+    parent.sendUrl('panic?type=3')
+  }
 }
 
 def reset() {
