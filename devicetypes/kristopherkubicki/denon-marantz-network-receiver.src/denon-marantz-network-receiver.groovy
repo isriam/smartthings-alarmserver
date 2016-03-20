@@ -3,7 +3,11 @@
  *     Works on Network Receivers newer than 2012
  *    SmartThings driver to connect your Denon Network Receiver to SmartThings
  *
- */rt", description: "The port you wish to connect", defaultValue: 80)
+ */
+
+preferences {
+	input("destIp", "text", title: "IP", description: "The device IP")
+    input("destPort", "number", title: "Port", description: "The port you wish to connect", defaultValue: 80)
 }
  
 
