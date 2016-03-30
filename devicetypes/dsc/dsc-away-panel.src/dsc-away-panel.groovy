@@ -11,6 +11,7 @@ metadata {
     // Automatically generated. Make future change here.
     definition (name: "DSC Away Panel", author: "Jordan <jordan@xeron.cc>", namespace: 'dsc') {
         capability "Switch"
+        capability "Refresh"
 
         command "away"
         command "bypassoff"
@@ -43,7 +44,7 @@ metadata {
         state "exitdelay", label:'Exit Delay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#ff9900"
         state "notready", label:'Not Ready', icon:"st.security.alarm.off", backgroundColor:"#ffcc00"
         state "ready", label:'Ready', action: 'away', icon:"st.security.alarm.off", backgroundColor:"#79b821"
-        state "forceready", label:'Ready', action: 'away', icon:"st.security.alarm.off", backgroundColor:"#79b821"
+        state "forceready", label:'Ready - F', action: 'away', icon:"st.security.alarm.off", backgroundColor:"#79b821"
         state "stay", label:'Armed Stay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#008CC1"
         state "instantaway", label:'Armed Instant Away', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#800000"
         state "instantstay", label:'Armed Instant Stay', action: 'disarm', icon:"st.security.alarm.on", backgroundColor:"#008CC1"
@@ -118,9 +119,13 @@ metadata {
         state "restore", label: 'Panic\u00A0Key', action: "keypanic", icon: "st.Transportation.transportation9", backgroundColor: "#000fd5"
         state "alarm", label: 'Panic\u00A0Key\u00A0Alarm', action: "keypanic", icon: "st.Transportation.transportation9", backgroundColor: "#000fd5"
       }
+      standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+        state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+      }
+
 
       main "status"
-      details(["status", "trouble", "chime", "away", "stay", "disarm", "instant", "night", "reset", "bypassoff", "ledready", "ledarmed", "ledmemory", "ledbypass", "key", "ledtrouble", "ledprogram", "ledfire", "ledbacklight", "keyfire", "keyaux", "keypanic"])
+      details(["status", "trouble", "chime", "away", "stay", "disarm", "instant", "night", "reset", "bypassoff", "ledready", "ledarmed", "ledmemory", "ledbypass", "key", "ledtrouble", "ledprogram", "ledfire", "ledbacklight", "keyfire", "keyaux", "keypanic", "refresh"])
     }
 }
 
@@ -219,6 +224,10 @@ def keypanic() {
   if ("${device.currentValue("key")}" == 'key') {
     parent.sendUrl('panic?type=3')
   }
+}
+
+def refresh() {
+  parent.sendUrl('refresh')
 }
 
 def reset() {
