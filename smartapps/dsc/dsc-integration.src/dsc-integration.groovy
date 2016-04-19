@@ -48,15 +48,15 @@ preferences {
   section('Notification events (optional):') {
     input 'notifyEvents', 'enum', title: 'Which Events?', description: 'Events to notify on', required: false, multiple: true,
       options: [
-        'all', 'partition alarm', 'partition armed', 'partition away', 'partition disarm', 'partition duress',
-        'partition entrydelay', 'partition exitdelay', 'partition forceready', 'partition instantaway',
-        'partition instantstay', 'partition notready', 'partition ready', 'partition restore', 'partition stay',
-        'partition trouble', 'partition keyfirealarm', 'partition keyfirerestore', 'partition keyauxalarm',
-        'partition keyauxrestore', 'partition keypanicalarm', 'partition keypanicrestore', 'led backlight on',
-        'led backlight off', 'led fire on', 'led fire off', 'led program on', 'led program off', 'led trouble on',
-        'led trouble off', 'led bypass on', 'led bypass off', 'led memory on', 'led memory off', 'led armed on',
-        'led armed off', 'led ready on', 'led ready off', 'zone alarm', 'zone clear', 'zone closed', 'zone fault',
-        'zone open', 'zone restore', 'zone smoke', 'zone tamper'
+        'all', 'partition alarm', 'partition armed', 'partition away', 'partition chime', 'partition disarm',
+        'partition duress', 'partition entrydelay', 'partition exitdelay', 'partition forceready',
+        'partition instantaway', 'partition instantstay', 'partition nochime', 'partition notready', 'partition ready',
+        'partition restore', 'partition stay', 'partition trouble', 'partition keyfirealarm', 'partition keyfirerestore',
+        'partition keyauxalarm', 'partition keyauxrestore', 'partition keypanicalarm', 'partition keypanicrestore',
+        'led backlight on', 'led backlight off', 'led fire on', 'led fire off', 'led program on', 'led program off',
+        'led trouble on', 'led trouble off', 'led bypass on', 'led bypass off', 'led memory on', 'led memory off',
+        'led armed on', 'led armed off', 'led ready on', 'led ready off', 'zone alarm', 'zone clear', 'zone closed',
+        'zone fault', 'zone open', 'zone restore', 'zone smoke', 'zone tamper'
       ]
   }
 }
@@ -118,6 +118,7 @@ def installzones() {
     'motion':'DSC Zone Motion',
     'smoke':'DSC Zone Smoke',
     'co':'DSC Zone CO',
+    'flood':'DSC Zone Flood',
   ]
 
   log.debug "children are ${children}"
@@ -178,6 +179,8 @@ def installpartitions() {
   def partMap = [
     'stay':'DSC Stay Panel',
     'away':'DSC Away Panel',
+    'simplestay':'DSC Simple Stay Panel',
+    'simpleaway':'DSC Simple Away Panel',
   ]
 
   log.debug "children are ${children}"
@@ -267,12 +270,51 @@ private update() {
   if (update.'parameters') {
     for (p in update.'parameters') {
       if (notifyEvents && (notifyEvents.contains('all') || notifyEvents.contains("led ${p.key} ${p.value}".toString()))) {
-        sendMessage("${update.'type'} ${update.'value'} in ${update.'status'} ${p.key} ${p.value} state")
+        def flash = (update.'status'.startsWith('ledflash')) ? 'flashing ' : ''
+        sendMessage("Keypad LED ${p.key.capitalize()}: ${flash}${p.value}")
       }
     }
   } else {
     if (notifyEvents && (notifyEvents.contains('all') || notifyEvents.contains("${update.'type'} ${update.'status'}".toString()))) {
-      sendMessage("${update.'type'} ${update.'value'} in ${update.'status'} state")
+      def messageMap = [
+        'alarm':'ALARMING!',
+        'armed':'armed',
+        'away':'armed away',
+        'clear':'sensor cleared',
+        'closed':'closed',
+        'chime':'chime enabled',
+        'disarm':'disarmed',
+        'duress':'DURESS ALARM!',
+        'entrydelay':'entry delay in progress',
+        'exitdelay':'exit delay in progress',
+        'fault': 'faulted!',
+        'forceready':'forced ready',
+        'instantaway':'armed instant away',
+        'instantstay':'armed instant stay',
+        'nochime':'chime disabled',
+        'notready':'not ready',
+        'open': 'opened',
+        'ready':'ready',
+        'restore':'restored',
+        'smoke': 'SMOKE DETECTED!',
+        'stay':'armed stay',
+        'tamper': 'tampered!',
+        'trouble':'in trouble state!',
+        'keyfirealarm':'Fire key ALARMING!',
+        'keyfirerestore':'Fire key restored',
+        'keyauxalarm':'Auxiliary key ALARMING!',
+        'keyauxrestore':'Auxiliary key restored',
+        'keypanicalarm':'Panic key ALARMING!',
+        'keypanicrestore':'Panic key restored',
+      ]
+
+      def messageBody = messageMap[update.'status']
+
+      if (update.'name') {
+        sendMessage("${update.'type'.capitalize()} ${update.'name'} ${messageBody}")
+      } else {
+        sendMessage(messageBody)
+      }
     }
   }
   if ("${update.'type'}" == 'zone') {
@@ -310,7 +352,7 @@ private updateZoneDevices(zonenum,zonestatus) {
   def zonedevice = children.find { item -> item.device.deviceNetworkId == "dsczone${zonenum}"}
   //def zonedevice = zonedevices.find { it.deviceNetworkId == "dsczone${zonenum}" }
   if (zonedevice) {
-    log.debug "Was True... Zone Device: $zonedevice.displayName at $zonedevice.deviceNetworkId is ${zonestatus}"
+    log.debug "zone: device $zonedevice.displayName at $zonedevice.deviceNetworkId is ${zonestatus}"
     //Was True... Zone Device: Front Door Sensor at zone1 is closed
     zonedevice.zone("${zonestatus}")
     if ("${settings.xbmcserver}" != "") {  //Note: I haven't tested this if statement, but it looks like it would work.
@@ -330,17 +372,15 @@ private updateZoneDevices(zonenum,zonestatus) {
 private updatePartitions(partitionnum, partitionstatus, partitionparams) {
   def children = getChildDevices()
   log.debug "partition: ${partitionnum} is ${partitionstatus}"
-  def awaypanel = children.find { item -> item.device.deviceNetworkId == "dscaway${partitionnum}"}
-  if (awaypanel) {
-    log.debug "Was True... Away Switch device: $awaypanel.displayName at $awaypanel.deviceNetworkId is ${partitionstatus}"
-    //Was True... Zone Device: Front Door Sensor at zone1 is closed
-    awaypanel.partition("${partitionstatus}", "${partitionnum}", partitionparams)
-  }
-  def staypanel = children.find { item -> item.device.deviceNetworkId == "dscstay${partitionnum}"}
-  if (staypanel) {
-    log.debug "Was True... Stay Switch device: $staypanel.displayName at $staypanel.deviceNetworkId is ${partitionstatus}"
-    //Was True... Zone Device: Front Door Sensor at zone1 is closed
-    staypanel.partition("${partitionstatus}", "${partitionnum}", partitionparams)
+
+  def panelList = ['stay', 'away', 'simplestay', 'simpleaway']
+  
+  for (paneltype in panelList) {
+    def panel = children.find { item -> item.device.deviceNetworkId == "dsc${paneltype}${partitionnum}"}
+    if (panel) {
+      log.debug "partition: ${paneltype.capitalize()} Panel device: $panel.displayName at $panel.deviceNetworkId is ${partitionstatus}"
+      panel.partition("${partitionstatus}", "${partitionnum}", partitionparams)
+    }
   }
 }
 
