@@ -1,9 +1,15 @@
 # SmartThings Repo
 
 My samsung smartthings modules. Modified alarmserver and control panel for DSC
-alarm integration.
+alarm integration. Also, my modified version of "Dim and Dimmer" for routines and
+with color bulb support:
 
-## Instructions
+See this thread for more info about DSC Alarm:
+https://community.smartthings.com/t/dsc-evl-3-4-alarmserver-smartthings/36604/126
+
+And this thread for info about Dim and Dimmer Routine:
+
+## Alarmserver Instructions
 
 ### Warnings about upgrading from an older version
 Device setup is done automatically in the new version. If you are upgrading from a previous version, please delete all the zone or panel devices you created first. These
@@ -40,9 +46,9 @@ There are 6 types of devices handlers you can create:
 
 At a minimum you'll probably want the Stay/Away panels, Contact, and Motion.
 
-In the Web IDE for Smartthings create a new device type for each of the above devices and paste in the code for each device from the corresponding groovy files in the repo.
+In the Web IDE for Smartthings create a new device type for each of the above devices and paste in the code for each device from the corresponding groovy files in the repo. Alternatively, setup github integration, create a new github repository with "LXXero" as owner, "DSCAlarm" as name, and "master" as branch. Once you have setup this repo, you can easily add all the devices. Be sure to check the publish checkbox at the bottom.
 
-For all the device types make sure you save them and then publish them for yourself.
+For all the device types, make sure publish them. If you're using github, use the "publish" checkbox. If you forget, or installed the code manually via copy/paste, you'll have to go into each one and click "publish -> for me" again.
 
 ### Smartapp Setup
 
@@ -82,3 +88,5 @@ Thanks goes out to the following people, without their previous work none of thi
 * Leaberry <leaberry@gmail.com>
 * Kent Holloway <drizit@gmail.com>
 * Matt Martz <matt.martz@gmail.com>
+
+And for Dim and Dimmer, Geko / Statusbits
